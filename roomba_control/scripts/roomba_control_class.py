@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import Twist, Point, Quaternion
 from nav_msgs.msg import Odometry
+from create_msgs.msg import Bumper
 import tf
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import time
@@ -16,7 +17,9 @@ class RobotControl():
         rospy.init_node('robot_control_node', anonymous=True)
         self.roomba_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
         self.odom_sub = rospy.Subscriber ('/create_driver/odom', Odometry, self.odom_callback)
+        self.bumper_sub = rospy.Subscriber('/bumper', Bumper, self.bumper_callback)
         self.cmd = Twist()
+        self.bmp = Bumper()
         self.roll = 0.0
         self.pitch = 0.0
         self.yaw = 0.0
@@ -52,6 +55,16 @@ class RobotControl():
         orientation_q = msg.pose.pose.orientation
         orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
         (self.roll, self.pitch, self.yaw) = euler_from_quaternion (orientation_list)
+
+    def bumper_callback(self, msg):
+        # bumper_sensor_list = [self.cmd.is_left_pressed, self.cmd.is_right_pressed]
+        if msg.is_left_pressed:
+            rospy.loginfo("Left bumper pressed")
+        if msg.is_right_pressed:
+            rospy.loginfo("Right bumper pressed")
+        if not msg.is_left_pressed and not msg.is_right_pressed:
+            rospy.loginfo("No bumper pressed")
+        
     
     def stop_robot(self):
         #rospy.loginfo("shutdown time! Stop the robot")
